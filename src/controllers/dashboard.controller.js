@@ -6,6 +6,12 @@ const getSummary = async (req, res) => {
   return sendSuccess(res, 200, "Dashboard summary fetched successfully", data);
 };
 
+const getRecentActivity = async (req, res) => {
+  const data = await dashboardService.getRecentActivity(req.query, req.user);
+  return sendSuccess(res, 200, "Dashboard recent activity fetched successfully", data);
+};
+
 module.exports = {
   getSummary,
+  getRecentActivity,
 };

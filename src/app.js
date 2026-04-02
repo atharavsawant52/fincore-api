@@ -7,6 +7,7 @@ const config = require("./config/env");
 const routes = require("./routes");
 const notFound = require("./middlewares/notFound.middleware");
 const errorHandler = require("./middlewares/error.middleware");
+const { swaggerServe, swaggerSetup } = require("./docs/swagger");
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.get("/health", (_req, res) => {
   });
 });
 
+app.use("/api-docs", swaggerServe, swaggerSetup);
 app.use("/api/v1", routes);
 app.use(notFound);
 app.use(errorHandler);

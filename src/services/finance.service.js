@@ -2,8 +2,16 @@ const FinancialRecord = require("../models/financialRecord.model");
 const { ROLES } = require("../constants/roles");
 const AppError = require("../utils/appError");
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const buildFinanceFilter = (query, requester) => {
   const filter = {};
+
+  if (requester.role === ROLES.ADMIN && query.includeDeleted) {
+    filter.isDeleted = true;
+  } else {
+    filter.isDeleted = false;
+  }
 
   if (query.type) {
     filter.type = query.type;
@@ -11,6 +19,11 @@ const buildFinanceFilter = (query, requester) => {
 
   if (query.category) {
     filter.category = query.category;
+  }
+
+  if (query.search) {
+    const searchRegex = new RegExp(escapeRegex(query.search), "i");
+    filter.$or = [{ category: searchRegex }, { notes: searchRegex }];
   }
 
   if (query.startDate || query.endDate) {
@@ -89,13 +102,16 @@ const listRecords = async (query, requester) => {
 };
 
 const getRecordById = async (recordId, requester) => {
-  const record = await FinancialRecord.findById(recordId).populate("user", "name email role");
+  const record = await FinancialRecord.findOne({ _id: recordId, isDeleted: false }).populate(
+    "user",
+    "name email role"
+  );
   assertRecordAccess(record, requester);
   return record;
 };
 
 const updateRecord = async (recordId, payload, requester) => {
-  const record = await FinancialRecord.findById(recordId);
+  const record = await FinancialRecord.findOne({ _id: recordId, isDeleted: false });
   assertRecordAccess(record, requester);
 
   Object.assign(record, payload, {
@@ -107,10 +123,14 @@ const updateRecord = async (recordId, payload, requester) => {
 };
 
 const deleteRecord = async (recordId, requester) => {
-  const record = await FinancialRecord.findById(recordId);
+  const record = await FinancialRecord.findOne({ _id: recordId, isDeleted: false });
   assertRecordAccess(record, requester);
 
-  await record.deleteOne();
+  record.isDeleted = true;
+  record.deletedAt = new Date();
+  record.deletedBy = requester.id;
+  record.updatedBy = requester.id;
+  await record.save();
 };
 
 module.exports = {

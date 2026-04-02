@@ -27,6 +27,7 @@ const financialQuerySchema = Joi.object({
     .valid(...RECORD_TYPE_VALUES)
     .optional(),
   category: Joi.string().trim().optional(),
+  search: Joi.string().trim().max(100).optional(),
   startDate: Joi.date().iso().optional(),
   endDate: Joi.date().iso().optional(),
   page: Joi.number().integer().min(1).default(1),
@@ -34,6 +35,7 @@ const financialQuerySchema = Joi.object({
   sortBy: Joi.string().valid("date", "amount", "createdAt").default("date"),
   sortOrder: Joi.string().valid("asc", "desc").default("desc"),
   userId: Joi.string().hex().length(24).optional(),
+  includeDeleted: Joi.boolean().default(false),
 });
 
 module.exports = {

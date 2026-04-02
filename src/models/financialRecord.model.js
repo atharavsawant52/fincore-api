@@ -49,6 +49,20 @@ const financialRecordSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -56,7 +70,7 @@ const financialRecordSchema = new mongoose.Schema(
   }
 );
 
-financialRecordSchema.index({ user: 1, date: -1 });
-financialRecordSchema.index({ user: 1, type: 1, category: 1 });
+financialRecordSchema.index({ user: 1, date: -1, isDeleted: 1 });
+financialRecordSchema.index({ user: 1, type: 1, category: 1, isDeleted: 1 });
 
 module.exports = mongoose.model("FinancialRecord", financialRecordSchema);

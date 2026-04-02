@@ -4,6 +4,8 @@ node_modules/
 .env
 .env.*
 !.env.example
+.env.local
+.env.test
 
 # Logs
 logs/
@@ -21,13 +23,22 @@ pids/
 # Coverage and reports
 coverage/
 .nyc_output/
+.jest/
 
 # Build output
 dist/
 build/
+
+# Docker and local containers
+.docker/
 
 # OS and editor files
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

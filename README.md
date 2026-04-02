@@ -10,10 +10,17 @@ This submission is built to match the backend assessment requirements:
 - Role-based access control
 - Active and inactive user handling
 - Financial record CRUD operations
+- Search support
+- Soft delete for finance records
 - Filtering, sorting, and pagination
 - Dashboard summary and aggregate analytics
+- Recent activity endpoint
+- Weekly and monthly trend analytics
 - Input validation and structured error handling
 - Persistent storage using MongoDB
+- Swagger API documentation
+- Automated integration tests
+- Seed script and Docker-based local setup
 
 ## Tech Stack
 
@@ -24,6 +31,21 @@ This submission is built to match the backend assessment requirements:
 - Joi for validation
 - JWT for authentication
 - Cookie-based or Bearer token-based auth support
+
+## Quick Start
+
+```bash
+npm install
+copy .env.example .env
+npm run seed
+npm start
+```
+
+Important local URLs:
+
+- API base: `http://localhost:5000/api/v1`
+- Swagger docs: `http://localhost:5000/api-docs`
+- Health check: `http://localhost:5000/health`
 
 ## Project Structure
 
@@ -138,6 +160,7 @@ Supported finance filters:
 
 - `type`
 - `category`
+- `search`
 - `startDate`
 - `endDate`
 - `page`
@@ -145,16 +168,20 @@ Supported finance filters:
 - `sortBy`
 - `sortOrder`
 - `userId` for admins
+- `includeDeleted` for admins
 
 ### Dashboard
 
 - `GET /dashboard/summary`
+- `GET /dashboard/recent-activity`
 
 Supported dashboard filters:
 
 - `startDate`
 - `endDate`
 - `userId` for admins
+- `recentLimit` for summary
+- `limit` for recent activity
 
 ## Dashboard Output
 
@@ -165,6 +192,8 @@ The dashboard summary service returns:
 - Net balance
 - Category-wise breakdown
 - Monthly trends grouped by type
+- Weekly trends grouped by type
+- Recent activity snapshot
 
 ## Validation and Error Handling
 
@@ -217,6 +246,9 @@ Error responses follow a consistent shape:
 - `notes`
 - `createdBy`
 - `updatedBy`
+- `isDeleted`
+- `deletedAt`
+- `deletedBy`
 - `createdAt`
 - `updatedAt`
 
@@ -230,7 +262,7 @@ npm install
 
 ### 2. Configure environment
 
-Create a `.env` file in the project root with:
+Create a `.env` file in the project root using `.env.example`:
 
 ```env
 PORT=5000
@@ -260,15 +292,62 @@ For development mode:
 npm run dev
 ```
 
+Run automated tests:
+
+```bash
+npm test
+```
+
+## API Documentation
+
+Swagger UI is available at:
+
+```text
+http://localhost:5000/api-docs
+```
+
 ## Suggested Manual Test Flow
 
 1. Call `POST /api/v1/auth/bootstrap-admin`
 2. Login as admin using `POST /api/v1/auth/login`
 3. Create an analyst and a viewer using `POST /api/v1/auth/register`
 4. Login as analyst and create finance records
-5. Verify viewer can read records but cannot modify them
-6. Verify admin can list users and change role or status
-7. Call `GET /api/v1/dashboard/summary` to verify aggregates
+5. Verify finance search with `GET /api/v1/finance?search=salary`
+6. Soft delete a record and confirm it no longer appears in default listing
+7. Verify viewer can read records but cannot modify them
+8. Verify admin can list users and change role or status
+9. Call `GET /api/v1/dashboard/summary` to verify aggregates
+10. Call `GET /api/v1/dashboard/recent-activity` to verify recent items
+
+## Seed Data
+
+Seed demo users and finance records:
+
+```bash
+npm run seed
+```
+
+Reset and reseed:
+
+```bash
+npm run seed:reset
+```
+
+Default seeded credentials:
+
+- `admin@example.com` / `Admin@1234`
+- `analyst@example.com` / `Analyst@1234`
+- `viewer@example.com` / `Viewer@1234`
+
+## Docker
+
+Run the API and MongoDB together:
+
+```bash
+docker compose up --build
+```
+
+The API will be available at `http://localhost:5000` and MongoDB at `mongodb://localhost:27017`.
 
 ## Postman Collection
 
@@ -291,7 +370,9 @@ The collection includes requests for:
 - auth flows
 - user management
 - finance CRUD
+- finance search
 - dashboard summary
+- dashboard recent activity
 
 ## Assumptions
 
@@ -300,20 +381,18 @@ The collection includes requests for:
 - Finance records belong to a single target user.
 - Non-admin users are restricted to their own finance data.
 - `ANALYST` is intentionally allowed to manage finance records but not users.
-- Hard delete is used for finance records instead of soft delete.
+- Finance record deletes are implemented as soft delete.
 
 ## Tradeoffs
 
 - MongoDB was chosen for simplicity and flexible iteration speed.
-- No test suite is included in this version to keep the implementation focused on core backend requirements.
-- No Swagger or OpenAPI spec is included; Postman collection is provided instead for API exploration.
 - No rate limiting or refresh-token session management is implemented because they were optional for the assignment.
 
 ## Known Limitations
 
-- There are no automated tests yet.
 - There is no deployment configuration in this submission.
-- Category breakdown and trends are aggregate outputs but not cached.
+- Category breakdown and trend queries are aggregate outputs and are not cached.
+- Swagger spec is maintained manually rather than generated from code.
 
 ## Evaluation Mapping
 
@@ -343,12 +422,16 @@ Joi validation, custom errors, duplicate handling, and invalid ID handling are i
 
 ### 7. Documentation
 
-This README plus the included Postman collection explain setup, usage, assumptions, and system behavior.
+This README, the included Postman collection, and Swagger UI explain setup, usage, assumptions, and system behavior.
+
+### 8. Additional Thoughtfulness
+
+The project includes soft delete, recent activity, weekly trends, a seed script, Docker support, and automated integration tests.
 
 ## Future Improvements
 
-- Add unit and integration tests
-- Add Swagger documentation
-- Add soft delete and audit history
+- Add role or policy abstraction for more granular permissions
+- Add audit history for user and finance changes
 - Add refresh tokens and session rotation
 - Add rate limiting and request throttling
+- Add deployment configuration for a hosted demo
